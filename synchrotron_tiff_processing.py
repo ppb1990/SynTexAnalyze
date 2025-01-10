@@ -11,7 +11,7 @@ import time
 from pandas.core.config_init import pc_show_dimensions_doc
 # author: Zhuo Li
 # email zl0401@princeton.edu
-
+################
 class synchrtron_imgSet_processing:  # making a class for this function
     def __init__(self,
                  tiff_dir, out_dir, img_ctrl, img_ctrl_dir,
