@@ -148,23 +148,55 @@ def rotation_211(x, y, z):
         cord_lst.append([temp_x, temp_y, temp_z])
     return cord_lst
 
-def get_inverse(x, y, z, intensity, add=True):
-    dc = {'x': [], 'y': [], 'z': [], 'intensity': []}
-    if type(intensity) != list:  # convert to list
-        intensity = [i for i in intensity]
-    for dx, dy, dz, di in zip(x, y, z, intensity):
-        values = [dx, dy, dz, di]
-        for key, value in zip(dc.keys(), values):
-            if key == 'intensity':
-                dc[key].append(value)  # add intensity twice with the same value
-            else:
-                dc[key].append(-value)  # add the mirrored value
+def get_inverse(x, y, z, intensity, add=True, carrier=None):
+    if carrier:  # carry other information with the operation
+        # it should be a dictionary and the value type should be list
+        if len(x) != len(carrier.values()[0]):
+            raise ValueError('The length of of items within carrier do not match the length of x')
 
-    if add:  # add the mirror to the original file
-        for key, value in zip(dc.keys(), [x, y, z, intensity]):
-            dc[key] = dc[key] + value
+        if intensity is not list:  # convert to list
+            intensity = [i for i in intensity]
+        for key, value in carrier.items():
+            if value is not list:
+                try:
+                    carrier[key] = [i for i in value]
+                except ValueError:
+                    raise ValueError('The {} inside carrier is not iterable'.format(key))
 
-    return dc['x'], dc['y'], dc['z'], dc['intensity']
+        dc = {'x': [], 'y': [], 'z': [], 'intensity': []}
+        original_dc = {'x': x, 'y': y, 'z': z, 'intensity': intensity}
+        for key, value in carrier.items():
+            dc[key] = []
+            original_dc[key] = value
+
+        for i in range(len(x)):
+            values = [original_dc[key][i] for key in original_dc.keys()]
+            _filter = ['x', 'y', 'z']
+            for key, value in zip(dc.keys(), values):
+                if key in _filter:
+                    dc[key].append(-value)
+                else:  # remain the same for items other than x, y, z
+                    dc[key].append(value)
+
+        return dc['x'], dc['y'], dc['z'], dc['intensity'], dc
+        # return the full dc for now, might change the function later to just return dc for both conditions
+    else:
+        dc = {'x': [], 'y': [], 'z': [], 'intensity': []}
+        if intensity is not list:   # convert to list
+            intensity = [i for i in intensity]
+        for dx, dy, dz, di in zip(x, y, z, intensity):
+            values = [dx, dy, dz, di]
+            for key, value in zip(dc.keys(), values):
+                if key == 'intensity':
+                    dc[key].append(value)  # add intensity twice with the same value
+                else:
+                    dc[key].append(-value)  # add the mirrored value
+
+        if add:  # add the mirror to the original file
+            for key, value in zip(dc.keys(), [x, y, z, intensity]):
+                dc[key] = dc[key] + value
+
+        return dc['x'], dc['y'], dc['z'], dc['intensity']
 
 
 
