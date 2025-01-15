@@ -178,8 +178,9 @@ def get_inverse(x, y, z, intensity, add=True, carrier=None):
                 else:  # remain the same for items other than x, y, z
                     dc[key].append(value)
 
-        return dc['x'], dc['y'], dc['z'], dc['intensity'], dc
         # return the full dc for now, might change the function later to just return dc for both conditions
+        return dc['x'], dc['y'], dc['z'], dc['intensity'], dc
+
     else:
         dc = {'x': [], 'y': [], 'z': [], 'intensity': []}
         if intensity is not list:   # convert to list
