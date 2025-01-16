@@ -148,20 +148,23 @@ def rotation_211(x, y, z):
         cord_lst.append([temp_x, temp_y, temp_z])
     return cord_lst
 
+
 def get_inverse(x, y, z, intensity, add=True, carrier=None):
     if carrier:  # carry other information with the operation
-        # it should be a dictionary and the value type should be list
-        if len(x) != len(carrier.values()[0]):
-            raise ValueError('The length of of items within carrier do not match the length of x')
-
-        if intensity is not list:  # convert to list
-            intensity = [i for i in intensity]
+        # Try to convert carrier values to lists if not already lists
         for key, value in carrier.items():
-            if value is not list:
+            if not isinstance(value, list):
                 try:
-                    carrier[key] = [i for i in value]
-                except ValueError:
-                    raise ValueError('The {} inside carrier is not iterable'.format(key))
+                    carrier[key] = list(value)  # Convert to list
+                except TypeError:
+                    raise ValueError(f"The value for key '{key}' in carrier cannot be converted to a list.")
+
+        if len(x) != len(list(carrier.values())[0]):
+            raise ValueError('The length of items within carrier does not match the length of x.')
+
+        # Ensure intensity is a list
+        if not isinstance(intensity, list):
+            intensity = list(intensity)
 
         dc = {'x': [], 'y': [], 'z': [], 'intensity': []}
         original_dc = {'x': x, 'y': y, 'z': z, 'intensity': intensity}
@@ -170,21 +173,23 @@ def get_inverse(x, y, z, intensity, add=True, carrier=None):
             original_dc[key] = value
 
         for i in range(len(x)):
-            values = [original_dc[key][i] for key in original_dc.keys()]
-            _filter = ['x', 'y', 'z']
-            for key, value in zip(dc.keys(), values):
-                if key in _filter:
+            values = {key: original_dc[key][i] for key in original_dc.keys()}
+            for key, value in values.items():
+                if key in ['x', 'y', 'z']:
                     dc[key].append(-value)
-                else:  # remain the same for items other than x, y, z
+                else:  # remain the same value for items other than x, y, z
                     dc[key].append(value)
 
-        # return the full dc for now, might change the function later to just return dc for both conditions
-        return dc['x'], dc['y'], dc['z'], dc['intensity'], dc
+        if add:  # Append original values to the mirrored values
+            for key in original_dc.keys():
+                dc[key].extend(original_dc[key])
 
+        return dc['x'], dc['y'], dc['z'], dc['intensity'], dc
+        # return the full dc for now, might change the function later to just return dc for both conditions
     else:
         dc = {'x': [], 'y': [], 'z': [], 'intensity': []}
-        if intensity is not list:   # convert to list
-            intensity = [i for i in intensity]
+        if not isinstance(intensity, list):
+            intensity = list(intensity)
         for dx, dy, dz, di in zip(x, y, z, intensity):
             values = [dx, dy, dz, di]
             for key, value in zip(dc.keys(), values):
@@ -200,11 +205,10 @@ def get_inverse(x, y, z, intensity, add=True, carrier=None):
         return dc['x'], dc['y'], dc['z'], dc['intensity']
 
 
-
 def get_symmetry(x, y, z, intensity, operation='110'):
     dc = {'x': [], 'y': [], 'z': [], 'intensity': []}
-    if type(intensity) != list:  # convert to list
-        intensity = [i for i in intensity]
+    if not isinstance(intensity, list):
+        intensity = list(intensity)
     for dx, dy, dz, di in zip(x, y, z, intensity):
         if operation == '110':
             cord_lst = rotation_110(dx, dy, dz)
@@ -221,28 +225,60 @@ def get_symmetry(x, y, z, intensity, operation='110'):
     return dc['x'], dc['y'], dc['z'], dc['intensity']
 
 
+def get_sphere(x, y, z, intensity, sphere='upper', carrier=None):
+    if carrier:  # carry other information with the operation
+        # Try to convert carrier values to lists if not already lists
+        for key, value in carrier.items():
+            if not isinstance(value, list):
+                try:
+                    carrier[key] = list(value)  # Convert to list
+                except TypeError:
+                    raise ValueError(f"The value for key '{key}' in carrier cannot be converted to a list.")
 
+        if len(x) != len(list(carrier.values())[0]):
+            raise ValueError('The length of items within carrier does not match the length of x.')
 
-def get_sphere(x, y, z, intensity, sphere = 'upper'):
-    dc = {'x': [], 'y': [], 'z': [], 'intensity': []}
-    if type(intensity) != list:  #  convert to list
-        intensity = [i for i in intensity]
-    for dx, dy, dz, di in zip(x, y, z, intensity):
-        values = [dx, dy, dz, di]
+        # Ensure intensity is a list
+        if not isinstance(intensity, list):
+            intensity = list(intensity)
 
-        if sphere == 'upper':
-            if dz >= 0:
-                for key, value in zip(dc.keys(), values):
-                    dc[key].append(value)
-        elif sphere == 'lower':
-            if dz <= 0:
-                for key, value in zip(dc.keys(), values):
-                    dc[key].append(value)
+        dc = {'x': [], 'y': [], 'z': [], 'intensity': []}
+        original_dc = {'x': x, 'y': y, 'z': z, 'intensity': intensity}
+        for key, value in carrier.items():
+            dc[key] = []
+            original_dc[key] = value
 
-    return dc['x'], dc['y'], dc['z'], dc['intensity']
+        for i in range(len(x)):
+            values = {key: original_dc[key][i] for key in original_dc.keys()}
+            dz = original_dc['z'][i]
+            if sphere == 'upper':
+                if dz >= 0:
+                    for key, value in zip(original_dc.keys(), values):
+                        dc[key].append(value)
+            elif sphere == 'lower':
+                if dz <= 0:
+                    for key, value in zip(original_dc.keys(), values):
+                        dc[key].append(value)
 
+        return dc['x'], dc['y'], dc['z'], dc['intensity'], dc
+        # return the full dc for now, might change the function later to just return dc for both conditions
+    else:
+        dc = {'x': [], 'y': [], 'z': [], 'intensity': []}
+        if not isinstance(intensity, list):
+            intensity = list(intensity)
+        for dx, dy, dz, di in zip(x, y, z, intensity):
+            values = [dx, dy, dz, di]
 
+            if sphere == 'upper':
+                if dz >= 0:
+                    for key, value in zip(dc.keys(), values):
+                        dc[key].append(value)
+            elif sphere == 'lower':
+                if dz <= 0:
+                    for key, value in zip(dc.keys(), values):
+                        dc[key].append(value)
 
+        return dc['x'], dc['y'], dc['z'], dc['intensity']
 
 def read_spots(file_path, system = 'mac',offset=None,get_tth=False):
     if offset is None:
