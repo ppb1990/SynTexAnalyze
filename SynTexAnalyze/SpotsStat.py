@@ -38,7 +38,8 @@ class SpotsStat:
             self._filtered_df = self.apply_filter(title, sign, threshold)
         else:
             self._filtered_df = None
-        # need to add functions to calculate Phi and Chi here using the initial tilting angle, azm, and the actual tilting angle
+        # need to add functions to calculate Phi and Chi here
+        # using the initial tilting angle, azm, and the actual tilting angle
 
     @property
     def df(self):
@@ -116,23 +117,23 @@ class SpotsStat:
             ValueError: If the specified comparing operator is invalid
         """
 
-        def le(title, threshold):
-            return self.df[self.df[title].le(threshold)]
+        def le(name, value):
+            return self.df[self.df[name].le(value)]
 
-        def lt(title, threshold):
-            return self.df[self.df[title].lt(threshold)]
+        def lt(name, value):
+            return self.df[self.df[name].lt(value)]
 
-        def ge(title, threshold):
-            return self.df[self.df[title].ge(threshold)]
+        def ge(name, value):
+            return self.df[self.df[name].ge(value)]
 
-        def gt(title, threshold):
-            return self.df[self.df[title].gt(threshold)]
+        def gt(name, value):
+            return self.df[self.df[name].gt(value)]
 
-        def eq(title, threshold):
-            return self.df[self.df[title].eq(threshold)]
+        def eq(name, value):
+            return self.df[self.df[name].eq(value)]
 
-        def ne(title, threshold):
-            return self.df[self.df[title].ne(threshold)]
+        def ne(name, value):
+            return self.df[self.df[name].ne(value)]
 
         dispatcher = {'==': eq, '!=': ne, '<=': le, '<': lt, '>=': ge, '>': gt}
 
@@ -160,14 +161,14 @@ class SpotsStat:
         if bins == 'default':
             # bins = [10,100,1000,10000,100000,1000000]
             bins = [10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000]
-            distribution = [0 for i in bins]
+            distribution = [0] * len(bins)
             if filtering:
                 intensity = self._filtered_df['intensity']
             else:
                 intensity = self._df['intensity']
             for i in intensity:
-                E = int(np.log10(i))
-                idx = (E * 2 - 1) + int(np.log10(i / 10 ** E) - np.log10(5) + 1)
+                a = int(np.log10(i))
+                idx = (a * 2 - 1) + int(np.log10(i / 10 ** a) - np.log10(5) + 1)
                 if idx >= 10:
                     idx = 10
                 distribution[idx] += 1
@@ -221,7 +222,6 @@ class SpotsStat:
         else:
             ax.set_ylabel(kwargs['ylabel'])
 
-
         if 'title' not in kwargs.keys():
             # ax.set_title('Intensity')
             pass
@@ -237,8 +237,6 @@ class SpotsStat:
             plt.close(fig)
         if get_st:
             return st
-
-
 
     def get_tth_hist(self, bin_size=20, filtering=False, get_st=False):
         """
@@ -257,16 +255,13 @@ class SpotsStat:
             return distribution, bins
 
     def plt_tth_hist(self, bin_size=20, show=True,
-                       saveAs=None, get_st=True, filtering=False,
-                       **kwargs):
+                       saveAs=None, get_st=True, filtering=False, **kwargs):
         """
         Plot the intensity histogram of the spots
 
 
         Args:
-            bins (str)
-            log (bool)
-            range (None or list)
+            bin_size (int)
             show (bool)
             saveAs (str)
             get_st (bool)
@@ -280,7 +275,7 @@ class SpotsStat:
             distribution, bins, st = self.get_tth_hist(bin_size=bin_size, filtering=filtering, get_st=get_st)
         else:
             distribution, bins = self.get_tth_hist(bin_size=bin_size, filtering=filtering, get_st=get_st)
-        bins = [str(format(i,'.3f')) for i in bins]  # change bins to str
+        bins = [str(format(i, '.3f')) for i in bins]  # change bins to str
 
         fig, ax = plt.subplots()
         ax.bar(bins, distribution)
@@ -295,7 +290,6 @@ class SpotsStat:
             ax.set_ylabel('Counts')
         else:
             ax.set_ylabel(kwargs['ylabel'])
-
 
         if 'title' not in kwargs.keys():
             # ax.set_title('Intensity')
@@ -331,16 +325,14 @@ class SpotsStat:
             return distribution, bins
 
     def plt_phi_hist(self, bin_size=30, show=True,
-                       saveAs=None, get_st=True, filtering=False,
-                       **kwargs):
+                       saveAs=None, get_st=True, filtering=False, **kwargs
+                     ):
         """
         Plot the intensity histogram of the spots
 
 
         Args:
-            bins (str)
-            log (bool)
-            range (None or list)
+            bin_size (int)
             show (bool)
             saveAs (str)
             get_st (bool)s
@@ -354,7 +346,7 @@ class SpotsStat:
             distribution, bins, st = self.get_phi_hist(bin_size=bin_size, filtering=filtering, get_st=get_st)
         else:
             distribution, bins = self.get_phi_hist(bin_size=bin_size, filtering=filtering, get_st=get_st)
-        bins = [str(format(i,'.3f')) for i in bins]  # change bins to str
+        bins = [str(format(i, '.3f')) for i in bins]  # change bins to str
 
         fig, ax = plt.subplots()
         ax.bar(bins, distribution)
@@ -369,7 +361,6 @@ class SpotsStat:
             ax.set_ylabel('Counts')
         else:
             ax.set_ylabel(kwargs['ylabel'])
-
 
         if 'title' not in kwargs.keys():
             # ax.set_title('Intensity')
@@ -405,8 +396,7 @@ class SpotsStat:
             return distribution, bins
 
     def plt_chi_hist(self, bin_size=30, show=True,
-                       saveAs=None, get_st=True, filtering=False,
-                       **kwargs):
+                       saveAs=None, get_st=True, filtering=False, **kwargs):
         """
         Plot the intensity histogram of the spots
 
@@ -426,7 +416,8 @@ class SpotsStat:
             distribution, bins, st = self.get_chi_hist(bin_size=bin_size, filtering=filtering, get_st=get_st)
         else:
             distribution, bins = self.get_chi_hist(bin_size=bin_size, filtering=filtering, get_st=get_st)
-        bins = [str(format(i, '.0f')) for i in bins]  # change bins to str
+        # change bins to str
+        bins = [str(format(i, '.0f')) for i in bins]
 
         fig, ax = plt.subplots()
         ax.bar(bins, distribution)
