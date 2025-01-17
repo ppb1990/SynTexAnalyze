@@ -183,7 +183,7 @@ class SpotsStat:
             pass  # working on it
 
     def plt_inten_hist(self, bins='default', log=False, range=None, show=True,
-                       saveAs=None, get_st=True, filtering=False,
+                       save_as=None, get_st=True, filtering=False,
                        **kwargs):
         """
         Plot the intensity histogram of the spots
@@ -194,7 +194,7 @@ class SpotsStat:
             log (bool)
             range (None or list)
             show (bool)
-            saveAs (str)
+            save_as (str)
             get_st (bool)
             filtering (bool)
 
@@ -228,8 +228,8 @@ class SpotsStat:
         else:
             ax.set_title(kwargs['title'])
 
-        if saveAs:
-            plt.savefig(self.out_dir + saveAs)
+        if save_as:
+            plt.savefig(self.out_dir + save_as)
 
         if show:
             plt.show()
@@ -254,8 +254,7 @@ class SpotsStat:
         else:
             return distribution, bins
 
-    def plt_tth_hist(self, bin_size=20, show=True,
-                       saveAs=None, get_st=True, filtering=False, **kwargs):
+    def plt_tth_hist(self, bin_size=20, show=True, save_as=None, get_st=True, filtering=False, **kwargs):
         """
         Plot the intensity histogram of the spots
 
@@ -263,7 +262,7 @@ class SpotsStat:
         Args:
             bin_size (int)
             show (bool)
-            saveAs (str)
+            save_as (str)
             get_st (bool)
             filtering (bool)
 
@@ -297,8 +296,8 @@ class SpotsStat:
         else:
             ax.set_title(kwargs['title'])
 
-        if saveAs:
-            plt.savefig(self.out_dir + saveAs)
+        if save_as:
+            plt.savefig(self.out_dir + save_as)
 
         if show:
             plt.show()
@@ -324,8 +323,7 @@ class SpotsStat:
         else:
             return distribution, bins
 
-    def plt_phi_hist(self, bin_size=30, show=True,
-                       saveAs=None, get_st=True, filtering=False, **kwargs
+    def plt_phi_hist(self, bin_size=30, show=True, save_as=None, get_st=True, filtering=False, **kwargs
                      ):
         """
         Plot the intensity histogram of the spots
@@ -334,7 +332,7 @@ class SpotsStat:
         Args:
             bin_size (int)
             show (bool)
-            saveAs (str)
+            save_as (str)
             get_st (bool)s
             filtering (bool)
 
@@ -368,8 +366,8 @@ class SpotsStat:
         else:
             ax.set_title(kwargs['title'])
 
-        if saveAs:
-            plt.savefig(self.out_dir + saveAs)
+        if save_as:
+            plt.savefig(self.out_dir + save_as)
 
         if show:
             plt.show()
@@ -395,8 +393,7 @@ class SpotsStat:
         else:
             return distribution, bins
 
-    def plt_chi_hist(self, bin_size=30, show=True,
-                       saveAs=None, get_st=True, filtering=False, **kwargs):
+    def plt_chi_hist(self, bin_size=30, show=True, save_as=None, get_st=True, filtering=False, **kwargs):
         """
         Plot the intensity histogram of the spots
 
@@ -404,7 +401,7 @@ class SpotsStat:
         Args:
             bin_size(int)
             show (bool)
-            saveAs (str)
+            save_as (str)
             get_st (bool)
             filtering (bool)
 
@@ -439,8 +436,8 @@ class SpotsStat:
         else:
             ax.set_title(kwargs['title'])
 
-        if saveAs:
-            plt.savefig(self.out_dir + saveAs)
+        if save_as:
+            plt.savefig(self.out_dir + save_as)
 
         if show:
             plt.show()
