@@ -386,12 +386,3 @@ def Ewald_get_sideview(file_path, theta,
         out_path = os.path.join(out_path, out_name)
         fig.savefig(out_path)
 
-
-
-
-
-
-
-
-
-
