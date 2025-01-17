@@ -3,10 +3,13 @@ import numpy as np
 from matplotlib import pyplot as plt
 from intensity_to_Ewald import *
 import steo_projection
-# Temporarily define a function here to process the raw, will implement it to the tiff processing in the future update
 
 
-def get_processed_df(df, theta=2.1, operando=False, sphere='upper'):  # always assume inverse for now
+def get_processed_df(df, theta=2.1, operando=False, sphere='upper'):
+    # Temporarily define a function here to process the raw spot data
+    # Convert the azm and tilt angle to Phi and Chi
+    # Will implement it to the tiff processing in the future update
+    # Always assume inverse for now
     _, _, tth, azm, intensity, rotation = [df[i] for i in df.keys()]
 
     x, y, z = azmR_to_xyz(azm, rotation, R=1, theta=theta, operando=operando)
