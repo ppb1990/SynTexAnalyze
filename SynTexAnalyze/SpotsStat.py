@@ -230,10 +230,10 @@ class SpotsStat:
         else:
             if not isinstance(kwargs['ylim'], list):
                 raise ValueError('ylim needs to be a list')
-            if len(kwargs['ylim'] != 2):
+            if len(kwargs['ylim']) != 2:
                 raise ValueError('the length of ylim needs to be 2 for min and max values')
             ymin, ymax = kwargs['ylim']
-            ax.set_ylim(ymin=ymin, ymax=ymax)
+            ax.set_ylim(kwargs['ylim'])
 
         if 'title' not in kwargs.keys():
             # ax.set_title('Intensity')
@@ -346,7 +346,7 @@ class SpotsStat:
             bin_size (int)
             show (bool)
             save_as (str)
-            get_st (bool)s
+            get_st (bool)
             filtering (bool)
 
         Returns:
