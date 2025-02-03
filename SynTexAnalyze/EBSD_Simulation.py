@@ -4,6 +4,12 @@ from matplotlib import colors
 from scipy.spatial import Voronoi
 from matplotlib.patches import Polygon, Wedge
 from shapely.geometry import Polygon as ShapelyPolygon
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import colors
+from scipy.spatial import Voronoi
+from matplotlib.patches import Polygon, Wedge
+from shapely.geometry import Polygon as ShapelyPolygon
 
 
 # ----------------------------
@@ -233,12 +239,7 @@ add_symmetry_colorbar(ax)
 
 plt.savefig('fiber_texture_ebsd.png', dpi=100, bbox_inches='tight')
 plt.show()
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib import colors
-from scipy.spatial import Voronoi
-from matplotlib.patches import Polygon, Wedge
-from shapely.geometry import Polygon as ShapelyPolygon
+
 
 # ----------------------------
 # 1. FIBER TEXTURE ORIENTATIONS
