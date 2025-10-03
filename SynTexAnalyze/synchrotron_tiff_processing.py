@@ -22,6 +22,8 @@ class synchrtron_imgSet_processing:  # making a class for this function
                  file_type='texture', azm_range=None
                  ):
         # file path for single data set
+
+        # need to simplify the system identification
         if system == 'windows':
             if tiff_dir[-1] == '\\':
                 self.tiff_dir = tiff_dir + 'dark_sub\\'
@@ -40,7 +42,7 @@ class synchrtron_imgSet_processing:  # making a class for this function
         elif type(GS_path) == str:
             self.GS_path = GS_path
         else:
-            raise ValueError(" 'GS_path' needs to be a dir!!!")
+            raise ValueError(" 'GSAS-II path not found")
 
         self.file_lst = [i for i in os.listdir(self.tiff_dir) if '.tiff' in i]
         self.file_path = [self.tiff_dir + i for i in self.file_lst]
