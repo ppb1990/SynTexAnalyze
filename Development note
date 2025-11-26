@@ -1,0 +1,5 @@
+Will also add the capability of process data generated at 11 ID-C and 1 ID-E
+
+Might be able to process the HEDM data or interact with MADIAS in the future to obtain HEDM results.
+
+For Data processing, might use GPU based processing or Cpython to increase the speed.

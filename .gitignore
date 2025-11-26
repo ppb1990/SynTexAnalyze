@@ -1,0 +1,19 @@
+# exact file
+# secret.key
+Development note
+
+# by extension
+# *.log
+.gitignore
+
+# a folder
+# build/
+
+# anywhere in the tree (needs **)
+# **/__pycache__/
+
+# keep one file that would otherwise be ignored
+# !keep.me
+
+# ignore macOS cruft
+.DS_Store
