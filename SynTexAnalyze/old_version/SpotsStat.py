@@ -1,6 +1,3 @@
-import pandas as pd
-import numpy as np
-from matplotlib import pyplot as plt
 from intensity_to_Ewald import *
 import steo_projection
 
