@@ -1,5 +1,6 @@
 import sys
 import numpy as np
+from PIL import Image
 
 def d_to_tth(d, w):  # calculate the tth from d spacing
     tth = np.arcsin(w / (d * 2)) * 2  # results in radians
@@ -122,3 +123,9 @@ def get_search_conditions(self,
         return ring_conditions
     else:
         raise ValueError(" lower_lim need to be either 'eq', int, or float!!!")
+
+def get_img_array(im_path, flip=True):
+    with Image.open(im_path) as im:
+        if flip:
+            im = im.transpose(Image.FLIP_TOP_BOTTOM)  # flip it to match the GSAS tth,azm map
+        return np.asarray(im)

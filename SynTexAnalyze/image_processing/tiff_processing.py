@@ -90,4 +90,58 @@ class TiffSetProcessor:
             self.azm_range = None
         print(f"Initialization complete with wavelength: {self.wavelength}, search conditions: {upper_lim}")
 
+    def ZL_get_ring(self, hkl, im_array, detector=None):
+        # im_array has been flipped to make it matches the GSAS-II image
+        # check to see if tth = im_tth[x,y] will return the correct image
+
+        # Aug-19 2024 added the filter option for azm range
+        if detector == None:
+            detector = self.detector
+
+        ring_lst = self.ring_conditions[hkl]
+        if self.azm_range != None:
+            azm_min = self.azm_range[0]
+            azm_max = self.azm_range[1]
+        else:
+            # no limitation
+            azm_min = 0
+            azm_max = 360
+
+        r_max = ring_lst[1]  # [j,j+upper_lim,j-upper_lim]
+        r_min = ring_lst[2]
+        ring_x = []
+        ring_y = []
+        ring_array = []
+        ring_im = np.copy(im_array)
+
+        if detector == 'PE':
+            for x in range(2048):
+                for y in range(2048):
+                    tth = self.im_tth[x, y]
+                    azm = self.im_azm[x, y]
+                    if r_min < tth < r_max and azm_min < azm < azm_max:
+                        ring_x.append(2047 - x)
+                        ring_y.append(y)
+                        ring_array.append(im_array[x, y])
+                        ring_im[x, y] = im_array[x, y]
+                    else:
+                        ring_im[x, y] = 0
+        elif detector == 'Pilatus':
+            for x in range(1679):
+                for y in range(1475):
+                    tth = self.im_tth[x, y]
+                    azm = self.im_azm[x, y]
+                    if r_min < tth < r_max and azm_min < azm < azm_max:
+                        ring_x.append(1678 - x)
+                        ring_y.append(y)
+                        ring_array.append(im_array[x, y])
+                        ring_im[x, y] = im_array[x, y]
+                    else:
+                        ring_im[x, y] = 0
+        ring_array = np.array(ring_array)
+
+        ring_status = self.ZL_get_ring_status(ring_array)
+
+        return ring_x, ring_y, ring_array, ring_im, ring_status
+
 
