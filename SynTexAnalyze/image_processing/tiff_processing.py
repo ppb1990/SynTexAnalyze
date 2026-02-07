@@ -5,11 +5,12 @@ from numba.core.typing.builtins import Range
 
 from Python_files.current_version.multi_processing import out_dir_lst
 
-from utils import *
+from _utils import *
 
 class TiffSetProcessor:
     def __init__(self,
-                 tiff_dir, out_dir, img_ctrl, img_ctrl_dir,
+                 tiff_dir, out_dir,
+                 img_ctrl, img_ctrl_dir, im_tth=None, im_azm=None, get_tth_azm=True,
                  root='C:\\', GS_path='default',
                  upper_lim=0.015, lower_lim='eq',
                  wavelength=0.1819,
@@ -25,6 +26,7 @@ class TiffSetProcessor:
 
         tiff_dir = tiff_dir.rstrip("\\/")  # clean the path
 
+        # this is to handle the data from different beamlines
         if not no_dark_sub:
             tiff_dir = os.path.join(tiff_dir,"dark_sub")
         self.tiff_dir = tiff_dir
@@ -51,8 +53,9 @@ class TiffSetProcessor:
             if not os.path.isdir(GS_path):
                 raise FileNotFoundError(f"GSAS-II path not found: {GS_path}")
 
-        self.GS_path = GS_path
-        self.img_ctrl_path = os.path.join(img_ctrl_dir,img_ctrl)
+        # get the tth and azm calibration
+        # either from loading calib files from GSAS-II
+        # or from existing im_tth and im_azm files
 
         if detector is None:
             self.detector = 'PE'
@@ -62,8 +65,21 @@ class TiffSetProcessor:
             raise ValueError(f"The detector needs to be either PE or Pilatus for now!")
 
         print(self.tiff_dir)
-        print('The detector is: {}.'.format(self.detector))
-        print(f"The image control file is: {img_ctrl}")
+        print(f"The detector is: {self.detector}")
+
+        if get_tth_azm:
+            print(f"Reading calibration from {img_ctrl}")
+            self.GS_path = GS_path
+            self.img_ctrl_path = os.path.join(img_ctrl_dir,img_ctrl)
+            self.im_tth, self.im_azm = get_intTAmap(self.GS_path, self.file_path, self.img_ctrl_path)
+        else:
+            if im_tth is None:
+                raise ValueError("im_tth is not found!")
+            if im_azm is None:
+                raise ValueError("im_azm is not found!")
+            print("Calibration file loaded")
+            self.im_tth = im_tth
+            self.im_azm = im_azm
 
         # temp fix for the file type for now, in the future will make it more universal.
         # should make a function to handle the data set more properly
@@ -82,7 +98,6 @@ class TiffSetProcessor:
 
         self.wavelength = wavelength  # define the wavelength in angstroms
         self.Li_lp_a = Li_lp_a  # default is lithium and the lithium
-        self.im_tth, self.im_azm = get_intTAmap(self.GS_path, self.file_path, self.img_ctrl_path)
         self.ring_conditions = get_search_conditions(upper_lim, lower_lim, Li_lp_a, wavelength)
         if azm_range is not None:  # a list with two numbers, e.g. [90,270]
             self.azm_range = azm_range
@@ -90,58 +105,29 @@ class TiffSetProcessor:
             self.azm_range = None
         print(f"Initialization complete with wavelength: {self.wavelength}, search conditions: {upper_lim}")
 
-    def ZL_get_ring(self, hkl, im_array, detector=None):
-        # im_array has been flipped to make it matches the GSAS-II image
-        # check to see if tth = im_tth[x,y] will return the correct image
+    def get_mult_rings(self):
+        # ongoing, obtain multiple rings from single process
+        # this will save time and use the same im_array
+        pass
 
-        # Aug-19 2024 added the filter option for azm range
-        if detector == None:
-            detector = self.detector
+    def get_ring(self, hkl, im_path, flip=True, detector=None, **kwargs):
+        rc = self.ring_conditions
+        im_tth = self.im_tth
+        im_azm = self.im_azm
+        azm_r = self.azm_range
+        det = self.detector
 
-        ring_lst = self.ring_conditions[hkl]
-        if self.azm_range != None:
-            azm_min = self.azm_range[0]
-            azm_max = self.azm_range[1]
+        im_array = get_im_array(im_path, flip=flip)
+
+        ring_x, ring_y, ring_array, ring_im = get_ring_array(hkl, im_array, rc, im_tth, im_azm, azm_r, det)
+
+        if 'remove_outlaw' in kwargs.keys():
+            ring_status = get_ring_status(ring_array, remove_outlaw=kwargs['remove_outlaw'])
         else:
-            # no limitation
-            azm_min = 0
-            azm_max = 360
-
-        r_max = ring_lst[1]  # [j,j+upper_lim,j-upper_lim]
-        r_min = ring_lst[2]
-        ring_x = []
-        ring_y = []
-        ring_array = []
-        ring_im = np.copy(im_array)
-
-        if detector == 'PE':
-            for x in range(2048):
-                for y in range(2048):
-                    tth = self.im_tth[x, y]
-                    azm = self.im_azm[x, y]
-                    if r_min < tth < r_max and azm_min < azm < azm_max:
-                        ring_x.append(2047 - x)
-                        ring_y.append(y)
-                        ring_array.append(im_array[x, y])
-                        ring_im[x, y] = im_array[x, y]
-                    else:
-                        ring_im[x, y] = 0
-        elif detector == 'Pilatus':
-            for x in range(1679):
-                for y in range(1475):
-                    tth = self.im_tth[x, y]
-                    azm = self.im_azm[x, y]
-                    if r_min < tth < r_max and azm_min < azm < azm_max:
-                        ring_x.append(1678 - x)
-                        ring_y.append(y)
-                        ring_array.append(im_array[x, y])
-                        ring_im[x, y] = im_array[x, y]
-                    else:
-                        ring_im[x, y] = 0
-        ring_array = np.array(ring_array)
-
-        ring_status = self.ZL_get_ring_status(ring_array)
+            ring_status = get_ring_status(ring_array)
 
         return ring_x, ring_y, ring_array, ring_im, ring_status
+
+
 
 

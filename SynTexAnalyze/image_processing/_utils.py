@@ -1,6 +1,8 @@
 import sys
 import numpy as np
 from PIL import Image
+from networkx import ring_of_cliques
+
 
 def d_to_tth(d, w):  # calculate the tth from d spacing
     tth = np.arcsin(w / (d * 2)) * 2  # results in radians
@@ -97,7 +99,7 @@ def get_intTAmap(GS_path,file_path, img_ctrl_path):
     return im_tth, im_azm
 
 
-def get_search_conditions(self,
+def get_search_conditions(
                               upper_lim,
                               lower_lim,
                               Li_lp_a,
@@ -111,7 +113,7 @@ def get_search_conditions(self,
     Li_hkl = ['110', '200', '211']
     Li_hkl_sum = [2, 4, 6]  # h^2 + k^2 + l^2 for (110) (200) (211)
     Li_d = [Li_lp_a * np.sqrt(1 / i) for i in Li_hkl_sum]
-    Li_tth = [self.d_to_tth(i, wavelength) for i in Li_d]
+    Li_tth = [d_to_tth(i, wavelength) for i in Li_d]
 
     if lower_lim == 'eq':
         for i, j in zip(Li_hkl, Li_tth):
@@ -124,8 +126,78 @@ def get_search_conditions(self,
     else:
         raise ValueError(" lower_lim need to be either 'eq', int, or float!!!")
 
-def get_img_array(im_path, flip=True):
+def get_im_array(im_path, flip=True):
     with Image.open(im_path) as im:
         if flip:
             im = im.transpose(Image.FLIP_TOP_BOTTOM)  # flip it to match the GSAS tth,azm map
         return np.asarray(im)
+
+def get_ring_array(hkl, im_array, ring_conditions,im_tth, im_azm, azm_range=None, detector=None):
+
+    # im_array has been flipped to make it matches the GSAS-II image
+    if detector == None:
+        detector = "PE"
+
+    ring_lst = ring_conditions[hkl]
+
+    if azm_range is None:
+        azm_min = 0
+        azm_max = 360
+    else:
+        if len(azm_range) != 2:
+            raise ValueError("The length of azm_range need to be 2, e.g. [10,30] ")
+        azm_min, azm_max = azm_range
+
+    r_max = ring_lst[1]
+    r_min = ring_lst[2]
+    ring_x = []
+    ring_y = []
+    ring_array = []
+    ring_im = np.copy(im_array)
+
+    if detector == 'PE':
+        for x in range(2048):
+            for y in range(2048):
+                tth = im_tth[x, y]
+                azm = im_azm[x, y]
+                if r_min < tth < r_max and azm_min < azm < azm_max:
+                    ring_x.append(2047 - x)
+                    ring_y.append(y)
+                    ring_array.append(im_array[x, y])
+                    ring_im[x, y] = im_array[x, y]
+                else:
+                    ring_im[x, y] = 0
+    elif detector == 'Pilatus':
+        for x in range(1679):
+            for y in range(1475):
+                tth = im_tth[x, y]
+                azm = im_azm[x, y]
+                if r_min < tth < r_max and azm_min < azm < azm_max:
+                    ring_x.append(1678 - x)
+                    ring_y.append(y)
+                    ring_array.append(im_array[x, y])
+                    ring_im[x, y] = im_array[x, y]
+                else:
+                    ring_im[x, y] = 0
+    ring_array = np.array(ring_array)
+
+    return ring_x, ring_y, ring_array, ring_im
+
+def get_ring_status(ring_array, remove_outlaw=False):
+
+    # need to update the remove function
+    if remove_outlaw:
+        ring_array.sort()
+        ring_array = ring_array[20:-20]
+
+    # this is to remove the negative value for now
+    # this can slow down the process and is not very logic
+    # will update it in the future
+    mean = ring_array.mean()
+    ring_array = np.array([i for i in ring_array if i > mean * 0.5])  # ignore the negative values
+    status = {'min': ring_array.min(),
+              'max': ring_array.max(),
+              'mean': ring_array.mean(),
+              'std': ring_array.std()
+              }
+    return status
